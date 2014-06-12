@@ -1,0 +1,4 @@
+// Preprocessor directories to set variables from values in the CmakeLists.txt files
+#define DATA_FOLDER "@DATA_FOLDER@"
+#define TRAIN_FOLDER "@TRAIN_FOLDER@"
+#define TEMPLATE_FOLDER "@TEMPLATE_FOLDER@"

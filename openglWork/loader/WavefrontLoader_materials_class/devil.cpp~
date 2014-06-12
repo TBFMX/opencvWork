@@ -1,0 +1,54 @@
+#include "devil.h"
+
+devilTexture::devilTexture(char *fileName)
+{
+	if (ilGetInteger(IL_VERSION_NUM) < IL_VERSION)
+	{
+		/* wrong DevIL version */
+		cout << "Wrong devil version\n";
+		return 1;
+	}
+
+	ilInit(); /* Initialization of DevIL */
+	ilGenImages(1, &ilTexID); /* Generation of one texID name */
+	ilBindImage(ilTexID); /* Binding of texID name */
+	success = ilLoadImage(fileName); /* Loading of texID "texID.jpg" */
+	
+	if(success) /* If no error occured: */
+	{
+		success = ilConvertImage(IL_RGB, IL_UNSIGNED_BYTE); /* Convert every colour component into
+			unsigned byte. If your texID contains alpha channel you can replace IL_RGB with IL_RGBA */
+		if (!success)
+		{
+			/* Error occured */
+			cout << "Could not convert image\n";
+			return 1;
+		}
+		glGenTextures(1, &texID); /* Texture name generation */
+		glBindTexture(GL_TEXTURE_2D, texID); /* Binding of texture name */
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); /* We will use linear
+			interpolation for magnification filter */
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); /* We will use linear
+			interpolation for minifying filter */
+		glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH),
+			ilGetInteger(IL_IMAGE_HEIGHT), 0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
+			ilGetData()); /* Texture specification */
+	}
+	else
+	{
+		/* Error occured */
+		cout << "OpenGL texture generation failed\n";
+		return 1;
+	}
+	
+	ilDeleteImages(1, &ilTexID); /* Because we have already copied texID data into texture data
+		we can release memory used by texID. */
+		
+	return 0;
+}
+
+void devilTexture::use()
+{
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, texID);
+}

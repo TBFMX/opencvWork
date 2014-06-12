@@ -1,0 +1,11 @@
+#ifndef _WAVEFRONT_MATERIAL_H_
+#define _WAVEFRONT_MATERIAL_H_
+
+#include "devil.h"
+
+class WFMaterial
+{
+	
+};
+
+#endif

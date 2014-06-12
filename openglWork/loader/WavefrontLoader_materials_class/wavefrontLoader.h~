@@ -1,0 +1,28 @@
+#ifndef _WAVEFRONT_LOADER_H_
+#define _WAVEFRONT_LOADER_H_
+
+#include <fstream>
+
+#include "wavefrontMaterial.h"
+#include "vector.h"
+
+class WFObject
+{
+	private:
+		Vector *verticies;
+		Vector *normals;
+		Face *faces;
+		TexCoord *texCoords;
+		WFMaterial *materials;
+		
+		void parseLine(char *line);
+		
+		
+	public:
+		WFObject(char *filename);
+		~WFObject();
+		
+		void draw(float scale);
+};
+
+#endif

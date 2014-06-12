@@ -1,0 +1,23 @@
+#ifndef _DEVIL_H_
+#define _DEVIL_H_
+
+#include <IL/il.h>
+#include <GL/gl.h>
+#include <iostream>
+using namespace std;
+
+class devilTexture
+{
+	private:
+		bool texAlpha;
+	public:
+		ILuint ilTexID;
+		GLuint texID;
+		ILboolean success;
+	
+		int load(char *fileName);
+		
+		void use();
+};
+
+#endif

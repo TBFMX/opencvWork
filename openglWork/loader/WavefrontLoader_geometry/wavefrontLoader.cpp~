@@ -1,0 +1,56 @@
+#include "wavefrontLoader.h"
+
+WFObject::WFObject(char *filename)
+{
+	ifstream objFile(filename);
+	
+	if(objFile.is_open())
+	{
+		string line;
+		
+		// Parse object file line by line
+		while(objFile.good())
+		{
+			getline(objFile, line);
+			parseLine(line);
+		}
+	}
+	else
+	{
+		cout << "Could not open WFObject file '" << filename << "'\n";
+	}
+	
+	objFile.close();
+}
+
+WFObject::~WFObject()
+{
+	
+}
+
+void WFObject::parseLine(string line)
+{
+	char tokens[3];
+	int tIndex = 0;
+	
+	// Parse tokens in line until \n
+	while(token != NULL)
+	{
+		token[tIndex] = strtok(line, ' ');
+		cout << token[tIndex] << endl;
+		tIndex++;
+	}
+	
+	// Switch through line and see what kind of line it is
+	if(!strcmp(parsed[0], "v"))	// Vertex
+	{
+		cout << "Vertex" << endl;
+	}
+	
+	
+}
+
+void WFObject::draw(float scale)
+{
+	
+}

@@ -1,0 +1,171 @@
+#include "main.h"
+
+/*
+ * SDL OpenGL Tutorial.
+ * (c) Michael Vance, 2000
+ * briareos@lokigames.com
+ *
+ * Distributed under terms of the LGPL. 
+ */
+
+
+#include <GL/glu.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+
+void handleKeyDown(SDL_keysym* keysym)
+{
+	switch(keysym->sym)
+	{
+		case SDLK_ESCAPE:
+			SDL_Quit();
+			exit(1);
+		break;
+		default: break;
+	}
+}
+
+void processEvents(void)
+{
+	// Our SDL event placeholder.
+	SDL_Event event;
+
+	angle++;
+
+	// Grab all the events off the queue.
+	while(SDL_PollEvent(&event))
+	{
+		switch(event.type)
+		{
+			case SDL_KEYDOWN:
+				handleKeyDown(&event.key.keysym);
+			break;
+			case SDL_QUIT:
+				SDL_Quit();
+			exit(1);
+			break;
+		}
+	}
+}
+
+void drawScene(void)
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	gluLookAt(0, 0, 5, /* look from camera XYZ */ 
+			  0, 0, 0, /* look at the origin */
+			  0, 1, 0); /* positive Y up vector */
+	
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();	
+	
+	// Rotate
+	glRotatef(angle, 0, 1, 0);
+	
+	// Draw triangle
+	glColor3f(1, 1, 1);
+	
+	glBegin(GL_TRIANGLES);
+		glVertex3f(0, 1, 0);
+		glVertex3f(-1, -1, 0);
+		glVertex3f(1, -1, 0);
+	glEnd();
+	
+	SDL_GL_SwapBuffers();
+}
+
+void init(int width, int height)
+{
+	// Work out ratio
+	float ratio = (float) width / (float) height;
+
+	// Smooth shading
+	glShadeModel(GL_SMOOTH);
+
+	// Face culling
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
+	//glEnable(GL_CULL_FACE);
+
+	// Background colour
+	glClearColor(0, 0, 0, 0);
+
+	// Setup viewport
+	glViewport(0, 0, width, height);
+
+	// Matrix mode
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	
+	gluPerspective(60.0, ratio, 1.0, 1024.0);
+	
+	// Load models
+	WFObject model(test.obj);
+}
+
+int main(int argc, char* argv[])
+{
+	const SDL_VideoInfo* info = NULL;
+	
+	// Window variables
+	int width = 800;
+	int height = 600;
+	int bpp = 0;
+	int flags = 0;
+
+	// Initialise SDL
+	if(SDL_Init(SDL_INIT_VIDEO) < 0)
+	{
+		// If failed, exit
+		cout << "Video initialization failed: " << SDL_GetError() << endl;
+		
+		SDL_Quit();
+		exit(1);
+	}
+
+	/* Let's get some video information. */
+	info = SDL_GetVideoInfo();
+
+	if(!info)
+	{
+		/* This should probably never happen. */
+		cout << "Video query failed: " << SDL_GetError() << endl;
+		
+		SDL_Quit();
+		exit(1);
+	}
+
+	bpp = info->vfmt->BitsPerPixel;
+
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+	flags = SDL_OPENGL/* | SDL_FULLSCREEN*/;
+
+	// Set video mode
+	if(SDL_SetVideoMode(width, height, bpp, flags) == 0)
+	{
+		cout << "Video mode set failed: " << SDL_GetError() << endl;
+				
+		SDL_Quit();
+		exit(1);
+	}
+
+	// Initialise OpenGL
+	init(width, height);
+
+	// Program loop
+	while(1)
+	{
+		// Process keypresses, etc
+		processEvents();
+		// Draw OpenGL scene
+		drawScene();
+	}
+
+	return 0;
+}

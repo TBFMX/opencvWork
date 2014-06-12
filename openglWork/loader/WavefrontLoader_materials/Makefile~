@@ -1,0 +1,19 @@
+CC = g++
+CFLAGS = -c -Wall
+LDFLAGS = -lIL -lGL -lGLU `sdl-config --cflags --libs` -lSDL -I../include -I/usr/include -I/usr/include/freetype2 -lftgl -lfreetype
+SOURCES = *.cpp
+OBJECTS = $(SOURCES:.cpp = .o)
+VERSION = 0.3.0
+EXECUTABLE = ObjectLoader-$(VERSION)
+
+all: $(SOURCES) $(EXECUTABLE)
+	
+$(EXECUTABLE): $(OBJECTS) 
+	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+
+.cpp.o:
+	$(CC) $(CFLAGS) $< -o $@
+
+clean:
+	rm -rf *.o $(EXECUTABLE)
+
