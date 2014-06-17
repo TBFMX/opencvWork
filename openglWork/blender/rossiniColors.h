@@ -1,4 +1,4 @@
-static GLfloat COLORS[][4] = {
+static float COLORS[][4] = {
 {0, 1, 0, 1.0}, 
 {0, 1, 0, 1.0}, 
 {0, 1, 0, 1.0}, 

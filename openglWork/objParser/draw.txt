@@ -1,0 +1,26 @@
+    parse the OBJ file, loading vertexes, normals, and faces;
+    from faces, create a definitive vertex index and a temporary arrays for normals and textures coordinates;
+    for each i in number_of_indexes do
+    definitive_normal_array[ index_array[i] ] :=
+    Temporary_normals_array[ TemporaryNormalIndexes[i] ]   
+
+
+ // PLT_VBOnames are references to the VBOS - see glGenBuffers()
+
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glBindBuffer(GL_ARRAY_BUFFER, PLT_VBOnames[2]);
+    glNormalPointer(GL_FLOAT, 0, NULL);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glBindBuffer(GL_ARRAY_BUFFER, PLT_VBOnames[0]);
+    glVertexPointer(3, GL_FLOAT, 0, (char *) NULL );
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, PLT_VBOnames[1]);
+
+    glDrawElements(GL_TRIANGLES, this->IndexesArray.size(), GL_UNSIGNED_INT, (GLvoid*)((char*)NULL));
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
