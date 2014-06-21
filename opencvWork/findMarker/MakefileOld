@@ -1,0 +1,20 @@
+all: lib/GeometryTypes.o lib/TinyLA.o lib/Marker.o  lib/MarkerDetector.o lib/CameraCalibration.o
+	g++ main.cpp lib/GeometryTypes.o lib/TinyLA.o lib/Marker.o lib/MarkerDetector.o lib/CameraCalibration.o -o main -L/usr/lib `sdl-config --cflags --libs` `pkg-config opencv --cflags --libs` -lGL -lGLU -lpthread
+
+lib/GeometryTypes.o: src/GeometryTypes.h src/GeometryTypes.cpp
+	g++ src/GeometryTypes.cpp -c -o lib/GeometryTypes.o
+
+lib/TinyLA.o: src/TinyLA.h src/TinyLA.cpp
+	g++ src/TinyLA.cpp -c -o lib/TinyLA.o
+
+lib/Marker.o: src/Marker.h src/Marker.cpp
+	g++ src/Marker.cpp -c -o lib/Marker.o
+
+lib/MarkerDetector.o: src/MarkerDetector.h src/MarkerDetector.cpp
+	g++ src/MarkerDetector.cpp -c -o lib/MarkerDetector.o
+
+lib/CameraCalibration.o: src/CameraCalibration.h src/CameraCalibration.cpp
+	g++ src/CameraCalibration.cpp -c -o lib/CameraCalibration.o
+
+clean:
+	@rm -f *~ src/*~ lib/* bin/*
