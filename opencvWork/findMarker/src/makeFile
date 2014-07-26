@@ -1,0 +1,7 @@
+g++ -g -I../include  -c GeometryTypes.cc
+g++ -g -I../include  -c CameraCalibration.cc
+g++ -g -I../include  -c TinyLA.cc
+g++ -g -I../include  -c Marker.cc
+g++ -g -I../include  -c MarkerDetector.cc
+ar -r ../lib/libar.a GeometryTypes.o CameraCalibration.o TinyLA.o Marker.o MarkerDetector.o 
+ranlib ../lib/libar.a

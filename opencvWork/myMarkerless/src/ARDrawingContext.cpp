@@ -58,7 +58,7 @@ struct face{
 };
 
 // for ordering from the farthest to nearest
-bool nearCamera(face a, face b){
+bool farToCamera(face a, face b){
 	return a.d > b.d;
 };
 
@@ -90,7 +90,7 @@ point3 directedVector(point3 *a, point3 * b){
 	
 	return a2b;
 }
-#define EPSILON 0.000001
+#define EPSILON 1e-7
 
 int intersectTriangle(point3 *orig, point3 *dir, point3 *v1, point3 *v2, point3 *v3,
 		float *t, float *u, float *v){
@@ -275,7 +275,7 @@ void getFacesNearToCamera(unsigned vertexesSize, point3 cameraOrigin,float inTex
 		}
 	}
 	
-	std::sort(faces.begin(),faces.end(),nearCamera);
+	std::sort(faces.begin(),faces.end(),farToCamera);
 	
 	std::vector<face>::iterator itFaces;
 	int k = 0;
@@ -301,6 +301,12 @@ void getFacesNearToCamera(unsigned vertexesSize, point3 cameraOrigin,float inTex
 	}
 
 	*finalVertexes = 3*saved;
+}
+
+void scaling(float scale, float inVertexes[], float outVertexes[], unsigned vertexesSize){
+	for(unsigned i  = 0; i < vertexesSize*3; ++i){
+		outVertexes[i] = inVertexes[i]*scale;
+	}
 }
 
 static void makeCheckImage(void)
@@ -482,7 +488,7 @@ void ARDrawingContext::buildProjectionMatrix(const CameraCalibration& calibratio
   projectionMatrix.data[7] = 0.0f;
 
   projectionMatrix.data[8] = 2.0f * c_x / screen_width - 1.0f;
-  projectionMatrix.data[9] = 2.0f * c_y / screen_height - 1.0f;    
+  projectionMatrix.data[9] = 2.0f * c_y / screen_height - 1.0f;
   projectionMatrix.data[10] = -( farPlane + nearPlane) / ( farPlane - nearPlane );
   projectionMatrix.data[11] = -1.0f;
 
@@ -668,8 +674,10 @@ void ARDrawingContext::drawFurnish()
 	
 	if (!m_isFurnishTextureInitialized)
 	{
-		m_furnishImage = cv::imread("couch.jpg",'b');
+		//texture image
+		m_furnishImage = cv::imread("couch.jpg");
 		
+		std::cout << "couch channels "<<m_furnishImage.channels() << std::endl;
 		glBindTexture(GL_TEXTURE_2D, m_backgroundTextureId[1]);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -688,8 +696,8 @@ void ARDrawingContext::drawFurnish()
 		else if (m_furnishImage.channels()==1)
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_furnishImage.data);
 
-		const GLfloat bgTextureVertices[] = { 0, 0, w, 0, 0, h, w, h };
-		const GLfloat bgTextureCoords[]   = { 1, 0, 1, 1, 0, 0, 0, 1 };			
+		//~ const GLfloat bgTextureVertices[] = { 0, 0, w, 0, 0, h, w, h };
+		//~ const GLfloat bgTextureCoords[]   = { 1, 0, 1, 1, 0, 0, 0, 1 };			
 			
 		m_isFurnishTextureInitialized = true;
 	}
@@ -714,6 +722,8 @@ glDisableClientState(GL_COLOR_ARRAY);
 	getFacesNearToCamera(couchNumVerts,cameraOrigin,couchTexCoords,COLORS,couchVerts,
 	outTexCoords,outColors,outVertexes,&finalVertexSize);
 	
+	// scaling the vertexes withon any help
+	scaling(scale, outVertexes, outVertexes,finalVertexSize);
 	
 	//~ glVertexPointer(3, GL_FLOAT, 0, couchVerts);
     //~ glTexCoordPointer(2, GL_FLOAT, 0, couchTexCoords);
@@ -732,5 +742,5 @@ glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
 	glDisable(GL_TEXTURE_2D);
   //~ glFlush();
-  //~ glPopAttrib();
+  glPopAttrib();
 }

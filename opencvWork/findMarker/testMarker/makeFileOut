@@ -1,0 +1,1 @@
+g++ -o main Visualization.o main.o  -L../lib -lar -lm `pkg-config --cflags --libs opencv` -lX11 -lGL -lGLU -lglut `sdl-config --cflags --libs` -lSDL 

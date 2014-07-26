@@ -77,10 +77,6 @@ void testMarkerDetector(){
 	cv::waitKey();
 }
 
-void drawAll(){
-	drawFrame();
-}
-
 // -- Written in C -- //
 
 Display                 *dpy;
@@ -93,88 +89,68 @@ Window                  win;
 GLXContext              glc;
 XWindowAttributes       gwa;
 XEvent                  xev;
-
-//~ void DrawAQuad() {
- //~ glClearColor(1.0, 1.0, 1.0, 1.0);
- //~ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//~ 
- //~ glMatrixMode(GL_PROJECTION);
- //~ glLoadIdentity();
- //~ glOrtho(-1., 1., -1., 1., 1., 20.);
-//~ 
- //~ glMatrixMode(GL_MODELVIEW);
- //~ glLoadIdentity();
- //~ gluLookAt(0., 0., 10., 0., 0., 0., 0., 1., 0.);
-//~ 
- //~ glBegin(GL_QUADS);
-  //~ glColor3f(1., 0., 0.); glVertex3f(-.75, -.75, 0.);
-  //~ glColor3f(0., 1., 0.); glVertex3f( .75, -.75, 0.);
-  //~ glColor3f(0., 0., 1.); glVertex3f( .75,  .75, 0.);
-  //~ glColor3f(1., 1., 0.); glVertex3f(-.75,  .75, 0.);
- //~ glEnd();
-//~ } 
  
 int main(int argc, char *argv[]) {
 
- dpy = XOpenDisplay(NULL);
+	dpy = XOpenDisplay(NULL);
+
+	if(dpy == NULL) {
+		printf("\n\tcannot connect to X server\n\n");
+		exit(0);
+	}
+		
+	root = DefaultRootWindow(dpy);
+
+	vi = glXChooseVisual(dpy, 0, att);
+
+	if(vi == NULL) {
+		printf("\n\tno appropriate visual found\n\n");
+		exit(0);
+	} 
+	else {
+		printf("\n\tvisual %p selected\n", (void *)vi->visualid); /* %p creates hexadecimal output like in glxinfo */
+	}
+
+	cmap = XCreateColormap(dpy, root, vi->visual, AllocNone);
+
+	swa.colormap = cmap;
+	swa.event_mask = ExposureMask | KeyPressMask;
+
+	win = XCreateWindow(dpy, root, 0, 0, 640, 480, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
+
+	XMapWindow(dpy, win);
+	XStoreName(dpy, win, "VERY SIMPLE APPLICATION");
+
+	glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
+	glXMakeCurrent(dpy, win, glc);
+
+	glEnable(GL_DEPTH_TEST);
  
- if(dpy == NULL) {
-        printf("\n\tcannot connect to X server\n\n");
-        exit(0);
- }
-        
- root = DefaultRootWindow(dpy);
+	while(1) {
+		// --------- simulates a camera frame -----------
+		cv::Mat currentFrame = cv::imread("images/currentFrame.jpg");
 
- vi = glXChooseVisual(dpy, 0, att);
+		// ----------------------------------------------
+		XNextEvent(dpy, &xev);
 
- if(vi == NULL) {
-        printf("\n\tno appropriate visual found\n\n");
-        exit(0);
- } 
- else {
-        printf("\n\tvisual %p selected\n", (void *)vi->visualid); /* %p creates hexadecimal output like in glxinfo */
- }
+		if(xev.type == Expose) {
+			XGetWindowAttributes(dpy, win, &gwa);
+			glViewport(0, 0, gwa.width, gwa.height);
+			//--- rendering in opengl ---
+			if(!currentFrame.empty())
+				drawFrame(&currentFrame);
+			//---------------------------
+			
+			glXSwapBuffers(dpy, win);
+		}
 
+		else if(xev.type == KeyPress) {
+			glXMakeCurrent(dpy, None, NULL);
+			glXDestroyContext(dpy, glc);
+			XDestroyWindow(dpy, win);
+			XCloseDisplay(dpy);
+			exit(0);
+		}
+	}
+} 
 
- cmap = XCreateColormap(dpy, root, vi->visual, AllocNone);
-
- swa.colormap = cmap;
- swa.event_mask = ExposureMask | KeyPressMask;
- 
- win = XCreateWindow(dpy, root, 0, 0, 640, 480, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
-
- XMapWindow(dpy, win);
- XStoreName(dpy, win, "VERY SIMPLE APPLICATION");
- 
- glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
- glXMakeCurrent(dpy, win, glc);
- 
- glEnable(GL_DEPTH_TEST); 
- 
- while(1) {
-        XNextEvent(dpy, &xev);
-        
-        if(xev.type == Expose) {
-                XGetWindowAttributes(dpy, win, &gwa);
-                glViewport(0, 0, gwa.width, gwa.height);
-                //~ DrawAQuad();
-                drawFrame(); 
-                glXSwapBuffers(dpy, win);
-        }
-                
-        else if(xev.type == KeyPress) {
-                glXMakeCurrent(dpy, None, NULL);
-                glXDestroyContext(dpy, glc);
-                XDestroyWindow(dpy, win);
-                XCloseDisplay(dpy);
-                exit(0);
-        }
-    } /* this closes while(1) { */
-} /* this is the } which closes int main(int */
-
-
-//~ int main(){
-	//~ testMarkerDetector();
-	//~ drawAll();
-	//~ return 0;
-//~ }

@@ -15,7 +15,16 @@
 #include "CameraCalibration.h"
 #include <vector>
 #include <iostream>
+#include <GL/gl.h>
+#include <GL/glu.h>
 //~ #include "BGRAVideoFrame.h"
 
+struct point3{
+	float x;
+	float y;
+	float z;
+};
+
+void getCameraOrigin(GLfloat mdl[16], point3 *camera_org);
 void setTransformationList(const std::vector<Transformation>& transformations);
-void drawFrame();
+void drawFrame(cv::Mat *currentFrame);

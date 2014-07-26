@@ -74,7 +74,8 @@ int CameraCalibrator::addChessboardPoints(
 		bool found = cv::findChessboardCorners(image, boardSize, imageCorners);
 		
 		// Get subpixel accuracy on the corners
-		cv::cornerSubPix(image, imageCorners, cv::Size(5,5), 
+		//~ cv::cornerSubPix(image, imageCorners, cv::Size(5,5), 
+		cv::cornerSubPix(image, imageCorners, cv::Size(20,20), 
 			cv::Size(-1,-1),
 			cv::TermCriteria(cv::TermCriteria::MAX_ITER +
 			cv::TermCriteria::EPS, 
@@ -142,14 +143,15 @@ cv::Mat CameraCalibrator::remap(const cv::Mat &image){
 
 void testOnePicture(){
 	//~ std::string pathToFile = "/home/abel/chess74.jpg";
-	std::string pathToFile = "boards/chess15.jpg";
+	//~ std::string pathToFile = "boards/chess15.jpg";
+	std::string pathToFile = "ipad/ipad04.jpg";
 	cv::Mat image = cv::imread(pathToFile,0);
 
 	// output vectors of image points
 	std::vector<cv::Point2f> imageCorners;
 	std::vector<cv::Point3f> objectCorners;
 	// number of corners on the chessboard
-	cv::Size boardSize(7,4);
+	cv::Size boardSize(6,3);
 	// Get the chessboard corners
 	bool found = cv::findChessboardCorners(image, boardSize, imageCorners);
 	 
@@ -162,27 +164,63 @@ void testOnePicture(){
 	cv::waitKey();	
 }
 
+//~ void fillPictureList(std::vector<std::string> *picList){
+	//~ 
+	//~ (*picList).push_back("boards/chess01.jpg");
+	//~ (*picList).push_back("boards/chess02.jpg");
+	//~ (*picList).push_back("boards/chess03.jpg");
+	//~ (*picList).push_back("boards/chess04.jpg");
+	//~ (*picList).push_back("boards/chess05.jpg");
+	//~ (*picList).push_back("boards/chess06.jpg");
+	//~ (*picList).push_back("boards/chess07.jpg");
+	//~ (*picList).push_back("boards/chess08.jpg");
+	//~ (*picList).push_back("boards/chess09.jpg");
+	//~ (*picList).push_back("boards/chess10.jpg");
+	//~ (*picList).push_back("boards/chess11.jpg");
+	//~ (*picList).push_back("boards/chess12.jpg");
+	//~ (*picList).push_back("boards/chess13.jpg");
+	//~ (*picList).push_back("boards/chess14.jpg");
+	//~ (*picList).push_back("boards/chess15.jpg");
+//~ }
+
 void fillPictureList(std::vector<std::string> *picList){
 	
-	(*picList).push_back("boards/chess01.jpg");
-	(*picList).push_back("boards/chess02.jpg");
-	(*picList).push_back("boards/chess03.jpg");
-	(*picList).push_back("boards/chess04.jpg");
-	(*picList).push_back("boards/chess05.jpg");
-	(*picList).push_back("boards/chess06.jpg");
-	(*picList).push_back("boards/chess07.jpg");
-	(*picList).push_back("boards/chess08.jpg");
-	(*picList).push_back("boards/chess09.jpg");
-	(*picList).push_back("boards/chess10.jpg");
-	(*picList).push_back("boards/chess11.jpg");
-	(*picList).push_back("boards/chess12.jpg");
-	(*picList).push_back("boards/chess13.jpg");
-	(*picList).push_back("boards/chess14.jpg");
-	(*picList).push_back("boards/chess15.jpg");
+	(*picList).push_back("ipad/ipad01.jpg");
+	(*picList).push_back("ipad/ipad02.jpg");
+	(*picList).push_back("ipad/ipad03.jpg");
+	(*picList).push_back("ipad/ipad04.jpg");
+	(*picList).push_back("ipad/ipad05.jpg");
+	(*picList).push_back("ipad/ipad06.jpg");
+	(*picList).push_back("ipad/ipad07.jpg");
+	(*picList).push_back("ipad/ipad08.jpg");
+	(*picList).push_back("ipad/ipad09.jpg");
+	(*picList).push_back("ipad/ipad10.jpg");
+	(*picList).push_back("ipad/ipad11.jpg");
+	(*picList).push_back("ipad/ipad12.jpg");
+	(*picList).push_back("ipad/ipad13.jpg");
+	(*picList).push_back("ipad/ipad14.jpg");
+	(*picList).push_back("ipad/ipad15.jpg");
+	(*picList).push_back("ipad/ipad16.jpg");
+	//~ (*picList).push_back("originalIpad/ipad01.jpg");
+	//~ (*picList).push_back("originalIpad/ipad02.jpg");
+	//~ (*picList).push_back("originalIpad/ipad03.jpg");
+	//~ (*picList).push_back("originalIpad/ipad04.jpg");
+	//~ (*picList).push_back("originalIpad/ipad05.jpg");
+	//~ (*picList).push_back("originalIpad/ipad06.jpg");
+	//~ (*picList).push_back("originalIpad/ipad07.jpg");
+	//~ (*picList).push_back("originalIpad/ipad08.jpg");
+	//~ (*picList).push_back("originalIpad/ipad09.jpg");
+	//~ (*picList).push_back("originalIpad/ipad10.jpg");
+	//~ (*picList).push_back("originalIpad/ipad11.jpg");
+	//~ (*picList).push_back("originalIpad/ipad12.jpg");
+	//~ (*picList).push_back("originalIpad/ipad13.jpg");
+	//~ (*picList).push_back("originalIpad/ipad14.jpg");
+	//~ (*picList).push_back("originalIpad/ipad15.jpg");
+	//~ (*picList).push_back("originalIpad/ipad16.jpg");
 }
 
 void testSeveralPictures( ){
-	cv::Size boardSize(7,4); // internal corners of the chessboard
+	cv::Size boardSize(6,3); // internal corners of the chessboard
 	// names of the picture with a 9x6 internal corners chessboard
 	std::vector<std::string>picList; 
 	fillPictureList(&picList);
@@ -191,7 +229,10 @@ void testSeveralPictures( ){
 	int successes = myCalibrator.addChessboardPoints(picList,boardSize);
 	std::cout << "successes "<< successes << std::endl;
 	
-	cv::Mat original = cv::imread("calibratedChess.jpg");
+	//~ cv::Mat original = cv::imread("calibratedChess.jpg");
+	//~ cv::Mat original = cv::imread("ipad/ipad16.jpg");
+	//~ cv::Mat original = cv::imread("ipad/ipad16new.jpg");
+	cv::Mat original = cv::imread("originalIpad/ipad16.jpg");
 	//~ cv::Mat original = cv::imread("chess74.jpg");
 	cv::Size s = original.size();
 	
