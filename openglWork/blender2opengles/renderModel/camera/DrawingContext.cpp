@@ -67,7 +67,10 @@ DrawingContext::DrawingContext(){
 	m_isFurnishTextureInitialized = false;
 	m_isTigerTextureInitialized = false;
 	m_isWindowUpdated = false;
-	m_isPatternPresent = false;
+	m_isAPatternPresent = false;
+	m_isTigerPresent = false;
+	m_isLightPresent = false;
+	m_isFurnishPresent = false;
 	m_objectToDraw = 0;
 	m_framebufferName = 0;
 	
@@ -96,7 +99,10 @@ DrawingContext::DrawingContext(cv::Size frameSize, const CameraCalibration& c)
   , m_isTigerTextureInitialized(false)
   , m_calibration(c)
   ,m_isWindowUpdated(false)
-  ,m_isPatternPresent(false)
+  ,m_isAPatternPresent(false)
+  ,m_isTigerPresent(false)
+  ,m_isFurnishPresent(false)
+  ,m_isLightPresent(false)
   ,m_objectToDraw(0)
   ,m_framebufferName(0)
   //~ , m_windowName(windowName)
@@ -181,7 +187,7 @@ int DrawingContext::objectToDraw(){
 }
 
 bool DrawingContext::isThereAPattern(){
-	return m_isPatternPresent;
+	return m_isAPatternPresent;
 }
 
 void DrawingContext::createTexture() {
@@ -219,7 +225,7 @@ void DrawingContext::destroyTexture() {
 
 void DrawingContext::renderToFrame(){
 
-		// getting allTextures
+	// getting allTextures
 	getObjectTexture(m_textureId[0],m_backgroundImage);
 	getObjectTexture(m_textureId[1],m_furnishImage);
 	getObjectTexture(m_textureId[2],m_tigerImage);
@@ -283,26 +289,45 @@ void DrawingContext::renderToFrame(){
 	//~ glViewport(0,0,m_width,m_height);
 }
 
+void DrawingContext::renderToScreen(){
+	createTexture();
+	getObjectTexture(m_textureId[0],m_backgroundImage);
+	getObjectTexture(m_textureId[1],m_furnishImage);
+	getObjectTexture(m_textureId[2],m_tigerImage);
+
+	float lPosition[] = {0.0,0.0,2.0};// z
+	//~ float lPosition[] = {0.5*cos(2*M_PI*m_angle),0.5*sin(2*M_PI*m_angle),2};// z
+	//~ float lPosition[] = {0, 2*cos(2*M_PI*m_angle), 2*sin(2*M_PI*m_angle)};
+	//~ float lPosition[] = {2*cos(2*M_PI*m_angle),0 ,2*sin(2*M_PI*m_angle)};
+	m_angle = m_angle + 0.05; // updating angle	// The depth buffer		
+	drawCameraFrame(m_textureId[0],m_width,m_height,false);
+	validatePatternPresent();
+	drawAugmentedScene(lPosition);
+}
 void DrawingContext::draw()
 {		
-	renderToFrame();
-
-	drawCameraFrame(m_textureId[0],m_width,m_height,false);
+	//~ renderToFrame();
+	renderToScreen();
+	//~ drawAugmentedScene(lPosition);
+	//~ drawCameraFrame(m_textureId[0],m_width,m_height,false);
 }
 
 void DrawingContext::drawPersistance()
 {
-	//~ getObjectTexture(m_textureId[0],m_backgroundImage);
-	//~ getObjectTexture(m_textureId[1],m_furnishImage);
-	//~ getObjectTexture(m_textureId[2],m_tigerImage);
-	//~ float lPosition[] = {cos(2*M_PI*m_angle),sin(2*M_PI*m_angle),2}; // z
+	createTexture();
+	getObjectTexture(m_textureId[0],m_backgroundImage);
+	getObjectTexture(m_textureId[1],m_furnishImage);
+	getObjectTexture(m_textureId[2],m_tigerImage);
+	
+	float lPosition[] = {cos(2*M_PI*m_angle),sin(2*M_PI*m_angle),2}; // z
 	//~ float lPosition[] = {0, 2*cos(2*M_PI*m_angle), 2*sin(2*M_PI*m_angle)}; // x
 	//~ float lPosition[] = {2*cos(2*M_PI*m_angle), 0, 2*sin(2*M_PI*m_angle)}; // y
-	//~ m_angle = m_angle + 0.05;
+	m_angle = m_angle + 0.05;
 
-	drawCameraFrame(m_textureId[3],m_width,m_height,true);                        // Render background
+	//~ drawCameraFrame(m_textureId[0],m_width,m_height,true);                        // Render background
+	drawCameraFrame(m_textureId[0],m_width,m_height,false);                        // Render background
 
-	//~ drawAugmentedPersistance(lPosition);                              // Draw AR
+	drawAugmentedPersistance(lPosition);                              // Draw AR
 	//~ drawCameraFrame(m_textureId[3]);
 }
 
@@ -320,11 +345,11 @@ void DrawingContext::drawCameraFrame(unsigned int texName,int w, int h, bool fli
 		//~ bgTextureVertices[4]=0;
 		//~ bgTextureVertices[5]=0;
 		bgTextureVertices[6]=w;
-		bgTextureVertices[7]=h;	
-		//~ bgTextureVertices[8]=0;	
-		bgTextureVertices[9]=0;	
-		//~ bgTextureVertices[10]=h;	
-		//~ bgTextureVertices[11]=0;	
+		bgTextureVertices[7]=h;
+		//~ bgTextureVertices[8]=0;
+		bgTextureVertices[9]=0;
+		//~ bgTextureVertices[10]=h;
+		//~ bgTextureVertices[11]=0;
 	}
 	glClearColor(0,0,0,0);
 	const GLfloat bgTextureCoords[]   = { 1, 0, 1, 1, 0, 0, 0, 1 };
@@ -348,11 +373,11 @@ void DrawingContext::drawCameraFrame(unsigned int texName,int w, int h, bool fli
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	endTexture();
 		
-	glPushMatrix();
-    GLfloat mdl[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, mdl);
-	getCameraOrigin(mdl,&cameraOrigin2);
-	glPopMatrix();
+	//~ glPushMatrix();
+    //~ GLfloat mdl[16];
+	//~ glGetFloatv(GL_MODELVIEW_MATRIX, mdl);
+	//~ getCameraOrigin(mdl,&cameraOrigin2);
+	//~ glPopMatrix();
 	//~ LOG_INFO("x=%f y=%f z=%f background ",cameraOrigin2.x,cameraOrigin2.y,cameraOrigin2.z);
 	endArrays();
 
@@ -360,82 +385,201 @@ void DrawingContext::drawCameraFrame(unsigned int texName,int w, int h, bool fli
 }
 
 void DrawingContext::validatePatternPresent(){
-	if (isPatternPresent)
+	if (isAPatternPresent)
 	{
-		Matrix44 projectionMatrix;
-		int w = m_backgroundImage.cols;
-		int h = m_backgroundImage.rows;
-		buildProjectionMatrix(m_calibration, w, h, projectionMatrix);		
-		// Set the pattern transformation
-		//~ Matrix44 glMatrix = patternPose.getMat44();
-		m_persistentProjection = projectionMatrix; // saving a copy of projection
-		m_persistentPose = patternPose.getMat44(); // saving a copy of pose
+		if(isLightPresent){
+			Matrix44 projectionMatrix;
+			int w = m_backgroundImage.cols;
+			int h = m_backgroundImage.rows;
+			buildProjectionMatrix(m_calibration, w, h, projectionMatrix);		
+			// Set the pattern transformation
+			m_persistentLightProjection = projectionMatrix; // saving a copy of projection
+			m_persistentLightPose = lightPose.getMat44(); // saving a copy of pose
+			
+			glPushMatrix();
+			glLoadMatrixf(reinterpret_cast<const GLfloat*>(&m_persistentLightPose.data[0]));
+			GLfloat mdl[16];
+			glGetFloatv(GL_MODELVIEW_MATRIX, mdl);
+			point3 lightCameraOrigin;
+			getCameraOrigin(mdl,&lightCameraOrigin);
+			glPopMatrix();
+			
+			m_cameraPositionLight1.x = lightCameraOrigin.x;
+			m_cameraPositionLight1.y = lightCameraOrigin.y;
+			m_cameraPositionLight1.z = lightCameraOrigin.z;
+			
+			//~ LOG_INFO("augmented scene");
+			std::cout << "augmented scene light" << std::endl;
+			std::cout << "x,y,z light " << lightCameraOrigin.x << ", "<< lightCameraOrigin.y <<", " << lightCameraOrigin.z << std::endl;
+			if(lightCameraOrigin.z <= 0.5){ // || cameraOrigin2.z >=10.0)
+				m_isLightPresent = false;
+
+			}else
+				m_isLightPresent = true;
+		} else {
+			m_isLightPresent = false;
+			m_cameraPositionLight1.x = 0;
+			m_cameraPositionLight1.y = 0;
+			m_cameraPositionLight1.z = 0;
+		}
 		
-		glPushMatrix();
-		glLoadMatrixf(reinterpret_cast<const GLfloat*>(&m_persistentPose.data[0]));
-		GLfloat mdl[16];
-		glGetFloatv(GL_MODELVIEW_MATRIX, mdl);
-		getCameraOrigin(mdl,&cameraOrigin2);
-		glPopMatrix();
+		if(isTigerPresent){
+			Matrix44 projectionMatrix;
+			int w = m_backgroundImage.cols;
+			int h = m_backgroundImage.rows;
+			buildProjectionMatrix(m_calibration, w, h, projectionMatrix);		
+			// Set the pattern transformation
+			m_persistentTigerProjection = projectionMatrix; // saving a copy of projection
+			m_persistentTigerPose = tigerPose.getMat44(); // saving a copy of pose
+			
+			glPushMatrix();
+			glLoadMatrixf(reinterpret_cast<const GLfloat*>(&m_persistentTigerPose.data[0]));
+			GLfloat mdl[16];
+			glGetFloatv(GL_MODELVIEW_MATRIX, mdl);
+			point3 tigerCameraOrigin;
+			getCameraOrigin(mdl,&tigerCameraOrigin);
+			glPopMatrix();
+	
+			m_cameraPositionTiger.x = tigerCameraOrigin.x;
+			m_cameraPositionTiger.y = tigerCameraOrigin.y;
+			m_cameraPositionTiger.z = tigerCameraOrigin.z;
+			
+			//~ LOG_INFO("augmented scene");
+			std::cout << "augmented scene tiger" << std::endl;
+			std::cout << "x,y,z tiger " << cameraOrigin2.x << ", "<< cameraOrigin2.y <<", " << cameraOrigin2.z << std::endl;
+			if(tigerCameraOrigin.z <= 0.5) // || cameraOrigin2.z >=10.0)
+				m_isTigerPresent = false;
+			else
+				m_isTigerPresent = true;
+		}else{
+			m_isTigerPresent = false;
+			m_cameraPositionTiger.x = 0;
+			m_cameraPositionTiger.y = 0;
+			m_cameraPositionTiger.z = 0;
+		}
 		
-		//~ LOG_INFO("augmented scene");
-		std::cout << "augmented scene" << std::endl;
-		if(cameraOrigin2.z <= 0.5) // || cameraOrigin2.z >=10.0)
-			m_isPatternPresent = false;
+		if(isFurnishPresent){
+			Matrix44 projectionMatrix;
+			int w = m_backgroundImage.cols;
+			int h = m_backgroundImage.rows;
+			buildProjectionMatrix(m_calibration, w, h, projectionMatrix);		
+			// Set the pattern transformation
+			m_persistentFurnishProjection = projectionMatrix; // saving a copy of projection
+			m_persistentFurnishPose = furnishPose.getMat44(); // saving a copy of pose
+			
+			glPushMatrix();
+			glLoadMatrixf(reinterpret_cast<const GLfloat*>(&m_persistentFurnishPose.data[0]));
+			GLfloat mdl[16];
+			glGetFloatv(GL_MODELVIEW_MATRIX, mdl);
+			getCameraOrigin(mdl,&cameraOrigin2);
+			glPopMatrix();
+			
+			//~ LOG_INFO("augmented scene");
+			std::cout << "augmented scene furnish" << std::endl;
+			if(cameraOrigin2.z <= 0.5) // || cameraOrigin2.z >=10.0)
+				m_isFurnishPresent = false;
+			else
+				m_isFurnishPresent = true;
+		}else{
+			m_isFurnishPresent = false;
+		}
+		
+		if (m_isLightPresent || m_isTigerPresent )
+			m_isAPatternPresent =  true;
 		else
-			m_isPatternPresent = true;
+			m_isAPatternPresent = false;
+		
 	}else{
-		m_isPatternPresent = false;
+		m_isAPatternPresent = false;
 	}
 }
 
 void DrawingContext::drawAugmentedScene(float lPosition[])
 {
-	// Init augmentation projection
-	glClear(GL_DEPTH_BUFFER_BIT); // this is the trickiest command
+	// Init augmentation projection	
+	float realPosition[]={0,0,0};
+	if(m_isLightPresent){
+		if(m_cameraPositionLight1.z > 0){
+			float ratioZTL = m_cameraPositionTiger.z/m_cameraPositionLight1.z;
+			realPosition[0] = m_cameraPositionTiger.x * ratioZTL - m_cameraPositionLight1.x ;
+			realPosition[1] = m_cameraPositionTiger.y * ratioZTL - m_cameraPositionLight1.y;
+			realPosition[2] = lPosition[0]*ratioZTL;
+			
+		}	
+		glClear(GL_DEPTH_BUFFER_BIT); // this is the trickiest command
+		glMatrixMode(GL_PROJECTION);
+		glLoadMatrixf(m_persistentLightProjection.data);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(m_persistentProjection.data);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		
+		glLoadMatrixf(reinterpret_cast<const GLfloat*>(&m_persistentLightPose.data[0]));
+		
+		drawCoordinateAxis();
+		drawSpot(lPosition);
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+
+	}
 	
-	glLoadMatrixf(reinterpret_cast<const GLfloat*>(&m_persistentPose.data[0]));
-	
-	drawCoordinateAxis();
-	drawSpot(lPosition);
-	if(m_objectToDraw == 1)
-		drawFurnish(lPosition);
-	else
-		drawTiger(lPosition);
+	if(m_isTigerPresent){
+		glClear(GL_DEPTH_BUFFER_BIT); // this ils the trickiest command	
+		glMatrixMode(GL_PROJECTION);
+		glLoadMatrixf(m_persistentTigerProjection.data);
+
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		
+		glLoadMatrixf(reinterpret_cast<const GLfloat*>(&m_persistentTigerPose.data[0]));
+
+		drawCoordinateAxis();
+		drawTigerShadow(realPosition);
+		drawTiger(realPosition);
+	}
 }
-
 
 void DrawingContext::drawAugmentedPersistance(float lPosition[])
 {
 	//~ LOG_INFO("augmented persistance");
 	std::cout << "augmented persistance" << std::endl;
-	// I;nit augmentation projection
-	glClear(GL_DEPTH_BUFFER_BIT); // this is the trickiest command
+	// Init augmented projection
+	glClear(GL_DEPTH_BUFFER_BIT);
+	float realPosition[]={0,0,0};
+	if(m_isLightPresent){
+		if(m_cameraPositionLight1.z > 0){
+			float ratioZTL = m_cameraPositionTiger.z/m_cameraPositionLight1.z;
+			realPosition[0] = m_cameraPositionTiger.x  - m_cameraPositionLight1.x * ratioZTL;
+			realPosition[1] = m_cameraPositionTiger.y  - m_cameraPositionLight1.y * ratioZTL;
+			realPosition[2] = lPosition[0]*ratioZTL;
+		}	
+		 // this is the trickiest command
+		glMatrixMode(GL_PROJECTION);
+		glLoadMatrixf(m_persistentLightProjection.data);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(m_persistentProjection.data);
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	glLoadMatrixf(reinterpret_cast<const GLfloat*>(&m_persistentPose.data[0]));
-	
-	// Render model
-	drawCoordinateAxis();
-	//~ drawCubeModel();
-	//~ try{
-		//~ drawFurnish();
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		
+		glLoadMatrixf(reinterpret_cast<const GLfloat*>(&m_persistentLightPose.data[0]));
+		
+		drawCoordinateAxis();
 		drawSpot(lPosition);
-		if(m_objectToDraw == 1)
-			drawFurnish(lPosition);
-		else
-			drawTiger(lPosition);
+
+
+	}
+	
+	if(m_isTigerPresent){
+		//~ glClear(GL_DEPTH_BUFFER_BIT); // this ils the trickiest command	
+		glMatrixMode(GL_PROJECTION);
+		glLoadMatrixf(m_persistentTigerProjection.data);
+
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		
+		glLoadMatrixf(reinterpret_cast<const GLfloat*>(&m_persistentTigerPose.data[0]));
+
+		drawCoordinateAxis();
+		drawTigerShadow(realPosition);
+		drawTiger(realPosition);
+	}
 }
 
 
@@ -535,9 +679,28 @@ void startTigerLight(float lPosition[]){
 	glShadeModel(GL_SMOOTH);
 
 	// tiger
-	GLfloat light_ambient[] = { 0.2, 0.2, 0.2, 1.0 };
+	GLfloat light_ambient[] = { 0.8, 0.8, 0.8, 1.0 };
 	GLfloat light_diffuse[] = { 0.64, 0.64, 0.64, 1.0 };
 	GLfloat light_specular[] = { 0.8, 0.8, 0.8, 1.0 };
+	GLfloat light_position[] = { lPosition[0], lPosition[1], lPosition[2], 1.0 };
+
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glShadeModel(GL_SMOOTH);
+}
+
+void startTigerShadow(float lPosition[]){
+	glShadeModel(GL_SMOOTH);
+
+	// tiger
+	GLfloat light_ambient[] = { 0.2, 0.2, 0.2, 1.0 };
+	GLfloat light_diffuse[] = { 0.0, 0.0, 0.0, 1.0 };
+	GLfloat light_specular[] = { 0.0, 0.0, 0.0, 1.0 };
 	GLfloat light_position[] = { lPosition[0], lPosition[1], lPosition[2], 1.0 };
 
 	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
@@ -577,6 +740,13 @@ void endSpotLight(){
 }
 
 void endTigerLight(){
+	glDisable(GL_LIGHT0);
+	glDisable(GL_LIGHTING);
+	//~ glDisable(GL_DEPTH_TEST);
+	//~ glDisable(GL_CULL_FACE);
+}
+
+void endTigerShadow(){
 	glDisable(GL_LIGHT0);
 	glDisable(GL_LIGHTING);
 	//~ glDisable(GL_DEPTH_TEST);
@@ -646,7 +816,6 @@ void DrawingContext::drawFurnish(float lPosition[])
 	glNormalPointer(GL_FLOAT,0,outNormals2);
 	glVertexPointer(3, GL_FLOAT, 0, outVertexes2);
     glTexCoordPointer(2, GL_FLOAT, 0, outTexCoords2);
-
 	
 	//~ glColor4f(1.0f,1.0f,1.0f,0.95f);
 	glColor4f(shadowTuner,shadowTuner,shadowTuner,1.0f);
@@ -660,11 +829,10 @@ void DrawingContext::drawFurnish(float lPosition[])
     glDisable(GL_BLEND);
     endFurnishLight();
     //~ glDisable(GL_LINE_SMOOTH);
-
 }
 
 void DrawingContext::drawTiger(float lPosition[])
-{	
+{
 	float shadowTuner = 1.0; // values from 0.0 to 1.0
 	//~ float scale = 4.0;
 	float scale = 3.0;
@@ -672,9 +840,12 @@ void DrawingContext::drawTiger(float lPosition[])
 	//~ glDisable(GL_COLOR_MATERIAL);
 	startTigerLight(lPosition);
 	glEnable(GL_BLEND);
+	//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_DST_ALPHA,GL_ONE_MINUS_DST_ALPHA);
+	//~ glBlendFunc(GL_SRC_COLOR,GL_SRC_COLOR);
 	//~ glEnable(GL_MULTISAMPLE);
 	// Enable texture mapping stuff
-	
+
 	glEnableClientState(GL_NORMAL_ARRAY);
 	startArrays();
 
@@ -684,19 +855,19 @@ void DrawingContext::drawTiger(float lPosition[])
 	getCameraOrigin(mdl,&cameraOrigin2);
 	glPopMatrix();
 	//~ LOG_INFO("x=%f y=%f z=%f, furnish",cameraOrigin2.x,cameraOrigin2.y,cameraOrigin2.z);
-	
+
 	point3 zeroPoint;
 	zeroPoint.x = 0.0;
 	zeroPoint.y = 0.0;
 	zeroPoint.z = 0.0;
-	
+
 	float distanceZC = getDistance(zeroPoint,cameraOrigin2);
-	
+
 	float scalatorViewPoint = 1.0;
 	float perfectViewPoint = 1.0;
 	if(distanceZC > 0)
 		scalatorViewPoint = perfectViewPoint/distanceZC;
-		
+
 	cameraOrigin2.x *= scalatorViewPoint;
 	cameraOrigin2.y *= scalatorViewPoint;
 	cameraOrigin2.z *= scalatorViewPoint;
@@ -705,43 +876,96 @@ void DrawingContext::drawTiger(float lPosition[])
 	//~ outTexCoords2,outColors2,outVertexes2,&finalVertexSize2);
 	getAllSortedFaces(TigerVertices,cameraOrigin2,TigerTexels,TigerPositions,TigerNormals,
 	outTexCoords2,outVertexes2,outNormals2,&finalVertexSize2);
-	
+
 	// scaling the vertexes withon any help
 	scaling(scale, outVertexes2, outVertexes2,finalVertexSize2);
-	
+
 	glNormalPointer(GL_FLOAT,0,outNormals2);
 	glVertexPointer(3,GL_FLOAT, 0, outVertexes2);
     glTexCoordPointer(2, GL_FLOAT, 0, outTexCoords2);
-	
+
 	//~ glColor4f(0.9f,0.9f,0.9f,1.0f);
 	glColor4f(shadowTuner,shadowTuner,shadowTuner,1.0f);
-	
+
 	startTexture(m_textureId[2]);
 	glDrawArrays(GL_TRIANGLES, 0, finalVertexSize2);
 	endTexture();
-	
+
 	endArrays();
 	glDisableClientState(GL_NORMAL_ARRAY);
-   
+
     //~ glDisable(GL_MULTISAMPLE);
     glDisable(GL_BLEND);
     endTigerLight();
     //~ glDisable(GL_LINE_SMOOTH);
 }
 
+void DrawingContext::drawTigerShadow(float lPosition[])
+{
+	float shadowTuner = 1.0; // values from 0.0 to 1.0
+
+	float scale = 3.0;
+	//~ glEnable(GL_LINE_SMOOTH);
+	startTigerShadow(lPosition);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//~ glBlendFunc(GL_DST_COLOR,GL_DST_COLOR); // original
+	//~ glBlendFunc(GL_DST_COLOR,GL_ONE_MINUS_DST_COLOR);
+
+		// Enable texture mapping stuff
+		
+	point3 lightDirection;
+	lightDirection.x = lPosition[0];
+	lightDirection.y = lPosition[1];
+	lightDirection.z = lPosition[2];
+	
+	//~ getFacesNearToLight(TigerVertices,lightDirection,TigerPositions,outVertexes2,&finalVertexSize2);
+	
+	//~ getOrthoShadow(finalVertexSize2,lightDirection,outVertexes2, outVertexes2,&finalVertexSize2);
+	//~ getOrthoShadow(TigerVertices,lightDirection,TigerPositions, outVertexes2,&finalVertexSize2);
+
+	//~ getPerspectiveShadow(finalVertexSize2,lightDirection,outVertexes2, outVertexes2,&finalVertexSize2);
+	getPerspectiveShadow(TigerVertices,lightDirection,TigerPositions, outVertexes2,&finalVertexSize2);
+	
+	// scaling the vertexes
+	scaling(scale, outVertexes2, outVertexes2,finalVertexSize2);
+	
+	//~ glNormalPointer(GL_FLOAT,0,outNormals2);
+	glVertexPointer(3,GL_FLOAT, 0, outVertexes2);
+    //~ glTexCoordPointer(2, GL_FLOAT, 0, outTexCoords2);
+	
+	//~ glColor4f(0.9f,0.9f,0.9f,1.0f);
+	glColor4f(shadowTuner,shadowTuner,shadowTuner,1.0f);
+	
+	//~ startTexture(m_textureId[2]);
+	glDrawArrays(GL_TRIANGLES, 0, finalVertexSize2);
+	//~ endTexture();
+	
+	endArrays();
+	//~ glDisableClientState(GL_NORMAL_ARRAY);
+   
+    //~ glDisable(GL_MULTISAMPLE);
+    glDisable(GL_BLEND);
+    endTigerShadow();
+
+    //~ glDisable(GL_LINE_SMOOTH);
+}
+
+
 // Called to draw scene
 void DrawingContext::drawSpot(float lPosition[])
 {
 	SolidSphere mSphere(0.1,12,24);
-	float whiteColor[4] = {1,1,1,1};
+	float whiteColor[4] = {1,1,0,1};
 	//~ glDisable(GL_COLOR_MATERIAL);
 	startSpotLight(lPosition);
 	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	glPushAttrib(GL_LIGHTING_BIT);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, whiteColor);
 	mSphere.draw(lPosition[0],lPosition[1],lPosition[2]);
 	glPopAttrib();
-	glDisable(GL_COLOR_MATERIAL);
+	//~ glDisable(GL_COLOR_MATERIAL);
 	glDisable(GL_BLEND);
 	endSpotLight();
 }

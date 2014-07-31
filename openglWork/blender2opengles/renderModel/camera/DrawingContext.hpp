@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////////////
 // File includes:
 #include "GeometryTypes.hpp"
+#include "geometryStructs.hpp"
 #include "CameraCalibration.hpp"
 
 #include "SolidSphere.hpp"
@@ -29,8 +30,13 @@ public:
 	DrawingContext(cv::Size frameSize, const CameraCalibration& c);
 	~DrawingContext();
 
-	bool                isPatternPresent;
-	Transformation      patternPose;
+	bool                isAPatternPresent;
+	bool				isTigerPresent;
+	bool 				isLightPresent;
+	bool 				isFurnishPresent;
+	Transformation      furnishPose;
+	Transformation      tigerPose;
+	Transformation      lightPose;
 
 
 	//! Set the new frame for the background
@@ -46,11 +52,12 @@ public:
 	void createTexture();
 	void destroyTexture();
 	void renderToFrame();
+	void renderToScreen();
 	void destroyFramebuffer();
 	bool isWindowUpdated();
 	void validatePatternPresent();
 	//! Draws the background with video
-	void drawCameraFrame(unsigned int, int,int,bool); 
+	void drawCameraFrame(unsigned int, int,int,bool);
 	//! Draws the coordinate axis 
 	void drawCoordinateAxis();
 	//! Draws the AR
@@ -63,6 +70,8 @@ public:
 	
 	//! Draw tiger
 	void drawTiger(float lPosition[]);
+	
+	void drawTigerShadow(float lPosition[]);
 	
 	void drawSpot(float lPosition[]);
 	
@@ -91,11 +100,20 @@ private:
 	GLuint		 	 m_framebufferName;
 	GLuint			 m_depthrenderbuffer;
   unsigned int 		 m_isWindowUpdated;
-  bool 				 m_isPatternPresent;
+  bool				 m_isAPatternPresent;
+  bool 				 m_isLightPresent;
+  bool				 m_isTigerPresent;
+  bool 				 m_isFurnishPresent;
   int 				 m_objectToDraw;
-  Matrix44			 m_persistentPose;
-  Matrix44			 m_persistentProjection;
+  Matrix44			 m_persistentTigerPose;
+  Matrix44			 m_persistentTigerProjection;
+  Matrix44			 m_persistentFurnishPose;
+  Matrix44			 m_persistentFurnishProjection;
+  Matrix44			 m_persistentLightPose;
+  Matrix44			 m_persistentLightProjection;
   double 			 m_angle;
+  point3			 m_cameraPositionLight1;
+  point3			 m_cameraPositionTiger;
   //~ std::string        m_windowName;
 };
 

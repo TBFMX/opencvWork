@@ -51,6 +51,7 @@ public:
   bool processFrame(const cv::Mat& bgraMat);
   
   const std::vector<Transformation>& getTransformations() const;
+  const std::vector<int>&getMarkerIds() const;
   
 protected:
 
@@ -83,7 +84,7 @@ private:
   cv::Mat camMatrix;
   cv::Mat distCoeff;
   std::vector<Transformation> m_transformations;
-  
+  std::vector<int> m_markerIds;
   cv::Mat m_grayscaleImage;
   cv::Mat m_thresholdImg;  
   cv::Mat canonicalMarkerImage;

@@ -102,9 +102,11 @@ bool MarkerDetector::processFrame(const cv::Mat& bgraMat)
     bool markerFound = findMarkers(bgraMat, markers);
 
     m_transformations.clear();
+    m_markerIds.clear();
     for (size_t i=0; i<markers.size(); i++)
     {
         m_transformations.push_back(markers[i].transformation);
+        m_markerIds.push_back(markers[i].id);
     }
     
     return markerFound;
@@ -113,6 +115,11 @@ bool MarkerDetector::processFrame(const cv::Mat& bgraMat)
 const std::vector<Transformation>& MarkerDetector::getTransformations() const
 {
     return m_transformations;
+}
+
+const std::vector<int>& MarkerDetector::getMarkerIds() const
+{
+    return m_markerIds;
 }
 
 

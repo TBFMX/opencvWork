@@ -365,6 +365,98 @@ void getFacesNearToCamera(unsigned vertexesSize, point3 cameraOrigin,float inTex
 	*finalVertexes = 3*saved;
 }
 
+void getFacesNearToLight(unsigned vertexesSize, point3 lightOrigin, float inVertexes[], float outVertexes[], unsigned *finalVertexes){
+	std::vector<face> faces;
+	
+	unsigned saved = 0;
+
+	// we divide vertexes size by 3 because each face has 3 vertexes
+	for(unsigned i  = 0; i < vertexesSize/3; ++i){
+
+		// we realize the vector product according to hand right rule
+		
+		point3 vertexCoord1;
+		vertexCoord1.x = inVertexes[9*i];
+		vertexCoord1.y = inVertexes[9*i + 1];
+		vertexCoord1.z = inVertexes[9*i + 2];
+		
+		point3 vertexCoord2;
+		vertexCoord2.x = inVertexes[9*i + 3];
+		vertexCoord2.y = inVertexes[9*i + 4];
+		vertexCoord2.z = inVertexes[9*i + 5];
+		
+		point3 vertexCoord3;
+		vertexCoord3.x = inVertexes[9*i + 6];
+		vertexCoord3.y = inVertexes[9*i + 7];
+		vertexCoord3.z = inVertexes[9*i + 8];
+
+		// this vector comes from p2 and goes to p1
+		point3 vT1 = directedVector(&vertexCoord2,&vertexCoord1);
+		// this vector comes from p2 and goes to p3
+		point3 vT2 = directedVector(&vertexCoord2,&vertexCoord3);
+		// we realize the vector product according to hand right rule
+		point3 normalOutFace = vectorProduct(&vT2,&vT1);
+		
+		point3 faceCenter;
+		faceCenter.x = (vertexCoord1.x + vertexCoord2.x + vertexCoord3.x)/3.0;
+		faceCenter.y = (vertexCoord1.y + vertexCoord2.y + vertexCoord3.y)/3.0;
+		faceCenter.z = (vertexCoord1.z + vertexCoord2.z + vertexCoord3.z)/3.0;
+		// vector from triangle face to camera origin;
+		point3 tF2cO = directedVector(&faceCenter,&lightOrigin);
+
+		// calcule internal product between gC2TC and normalOutFace
+		// if internal product greater or equal than zero 
+		//   save the coords that are facing to light
+		//~ if (internalProduct(&tF2cO,&normalOutFace) > 0){
+		
+		if (internalProduct(&tF2cO,&normalOutFace) > EPSILON){
+
+			point3 dir = directedVector(&lightOrigin,&faceCenter);
+			
+			if (intersectFace(&lightOrigin, &dir, &vertexCoord1, &vertexCoord2, &vertexCoord3) == 1) {
+				//~ int k = saved;
+				face currFace;
+				
+				currFace.d = getDistance(faceCenter,lightOrigin);
+				
+				currFace.f.p1.x = inVertexes[9*i];
+				currFace.f.p1.y = inVertexes[9*i + 1];
+				currFace.f.p1.z = inVertexes[9*i + 2];
+				currFace.f.p2.x = inVertexes[9*i + 3];
+				currFace.f.p2.y = inVertexes[9*i + 4];
+				currFace.f.p2.z = inVertexes[9*i + 5];
+				currFace.f.p3.x = inVertexes[9*i + 6];
+				currFace.f.p3.y = inVertexes[9*i + 7];
+				currFace.f.p3.z = inVertexes[9*i + 8];
+
+				faces.push_back(currFace);
+				++saved;
+			}
+		}
+	}
+	
+	//~ std::sort(faces.begin(),faces.end(),nearCamera);
+	
+	std::vector<face>::iterator itFaces;
+	int k = 0;
+	for(itFaces = faces.begin(); itFaces < faces.end(); ++itFaces){
+		outVertexes[9*k]=(*itFaces).f.p1.x;
+		outVertexes[9*k + 1]=(*itFaces).f.p1.y;
+		outVertexes[9*k + 2]=(*itFaces).f.p1.z;
+		outVertexes[9*k + 3]=(*itFaces).f.p2.x;
+		outVertexes[9*k + 4]=(*itFaces).f.p2.y;
+		outVertexes[9*k + 5]=(*itFaces).f.p2.z;
+		outVertexes[9*k + 6]=(*itFaces).f.p3.x;
+		outVertexes[9*k + 7]=(*itFaces).f.p3.y;
+		outVertexes[9*k + 8]=(*itFaces).f.p3.z;
+		
+		++k;
+	}
+
+	*finalVertexes = 3*saved;
+}
+
+
 void getAllSortedFaces(unsigned vertexesSize, point3 cameraOrigin,float inTexcoords[], float inVertexes[],
 						float inNormals[], float outTexCoords[], float outVertexes[], float outNormals[], unsigned *finalVertexes){
 	std::vector<face> faces;
@@ -479,6 +571,183 @@ void getAllSortedFaces(unsigned vertexesSize, point3 cameraOrigin,float inTexcoo
 	*finalVertexes = 3*saved;
 }
 
+
+void getOrthoShadow(unsigned vertexesSize, point3 lightDirection, float inVertexes[],
+						 float outVertexes[], unsigned *finalVertexes){
+	std::vector<face> faces;
+	
+	unsigned saved = 0;
+
+	// we divide vertexes size by 3 because each face has 3 vertexes
+	for(unsigned i  = 0; i < vertexesSize/3; ++i){
+		
+		point3 vertexCoord1;
+		vertexCoord1.x = inVertexes[9*i];
+		vertexCoord1.y = inVertexes[9*i + 1];
+		vertexCoord1.z = inVertexes[9*i + 2];
+		
+		point3 vertexCoord2;
+		vertexCoord2.x = inVertexes[9*i + 3];
+		vertexCoord2.y = inVertexes[9*i + 4];
+		vertexCoord2.z = inVertexes[9*i + 5];
+		
+		point3 vertexCoord3;
+		vertexCoord3.x = inVertexes[9*i + 6];
+		vertexCoord3.y = inVertexes[9*i + 7];
+		vertexCoord3.z = inVertexes[9*i + 8];
+			
+		face currFace;
+		float tz;
+		if(lightDirection.z > 0 || lightDirection.z < 0){
+			tz = - vertexCoord1.z / lightDirection.z;
+			currFace.f.p1.x = vertexCoord1.x + tz * lightDirection.x;
+			currFace.f.p1.y = vertexCoord1.y + tz * lightDirection.y;
+			currFace.f.p1.z = 0;
+			
+			tz = - vertexCoord2.z / lightDirection.z;
+			currFace.f.p2.x = vertexCoord2.x + tz * lightDirection.x;
+			currFace.f.p2.y = vertexCoord2.y + tz * lightDirection.y;
+			currFace.f.p2.z = 0;
+			
+			tz = - vertexCoord3.z / lightDirection.z;
+			currFace.f.p3.x = vertexCoord3.x + tz * lightDirection.x;
+			currFace.f.p3.y = vertexCoord3.y + tz * lightDirection.y;
+			currFace.f.p3.z = 0;
+			
+		}else{
+			tz = - vertexCoord1.z*1000;
+			
+			currFace.f.p1.x = vertexCoord1.x + tz * lightDirection.x;
+			currFace.f.p1.y = vertexCoord1.y + tz * lightDirection.y;
+			currFace.f.p1.z = 0;
+
+			currFace.f.p2.x = vertexCoord2.x + tz * lightDirection.x;
+			currFace.f.p2.y = vertexCoord2.y + tz * lightDirection.y;
+			currFace.f.p2.z = 0;
+
+			currFace.f.p3.x = vertexCoord3.x + tz * lightDirection.x;
+			currFace.f.p3.y = vertexCoord3.y + tz * lightDirection.y;
+			currFace.f.p3.z = 0;
+		}
+
+		faces.push_back(currFace);
+		++saved;
+	}
+	
+	std::vector<face>::iterator itFaces;
+	int k = 0;
+	for(itFaces = faces.begin(); itFaces < faces.end(); ++itFaces){
+		outVertexes[9*k]=(*itFaces).f.p1.x;
+		outVertexes[9*k + 1]=(*itFaces).f.p1.y;
+		outVertexes[9*k + 2]=(*itFaces).f.p1.z;
+		outVertexes[9*k + 3]=(*itFaces).f.p2.x;
+		outVertexes[9*k + 4]=(*itFaces).f.p2.y;
+		outVertexes[9*k + 5]=(*itFaces).f.p2.z;
+		outVertexes[9*k + 6]=(*itFaces).f.p3.x;
+		outVertexes[9*k + 7]=(*itFaces).f.p3.y;
+		outVertexes[9*k + 8]=(*itFaces).f.p3.z;
+		++k;
+	}
+
+	*finalVertexes = 3*saved;
+}
+
+
+void getPerspectiveShadow(unsigned vertexesSize, point3 lightPosition, float inVertexes[],
+						 float outVertexes[], unsigned *finalVertexes){
+	std::vector<face> faces;
+	
+	unsigned saved = 0;
+
+	// we divide vertexes size by 3 because each face has 3 vertexes
+	for(unsigned i  = 0; i < vertexesSize/3; ++i){
+		
+		point3 vertexCoord1;
+		vertexCoord1.x = inVertexes[9*i];
+		vertexCoord1.y = inVertexes[9*i + 1];
+		vertexCoord1.z = inVertexes[9*i + 2];
+		
+		point3 vertexCoord2;
+		vertexCoord2.x = inVertexes[9*i + 3];
+		vertexCoord2.y = inVertexes[9*i + 4];
+		vertexCoord2.z = inVertexes[9*i + 5];
+		
+		point3 vertexCoord3;
+		vertexCoord3.x = inVertexes[9*i + 6];
+		vertexCoord3.y = inVertexes[9*i + 7];
+		vertexCoord3.z = inVertexes[9*i + 8];
+
+		//~ point3 faceCenter;
+		//~ faceCenter.x = (vertexCoord1.x + vertexCoord2.x + vertexCoord3.x)/3.0;
+		//~ faceCenter.y = (vertexCoord1.y + vertexCoord2.y + vertexCoord3.y)/3.0;
+		//~ faceCenter.z = (vertexCoord1.z + vertexCoord2.z + vertexCoord3.z)/3.0;		
+
+		face currFace;
+		point3 lightDirection1 = directedVector(&lightPosition,&vertexCoord1);
+		point3 lightDirection2 = directedVector(&lightPosition,&vertexCoord2);
+		point3 lightDirection3 = directedVector(&lightPosition,&vertexCoord3);
+			
+		
+		if( (lightDirection1.z > 0 || lightDirection1.z < 0) &&
+			(lightDirection2.z > 0 || lightDirection2.z < 0) &&
+			(lightDirection3.z > 0 || lightDirection3.z < 0)
+		){
+			float tz1 = - vertexCoord1.z / lightDirection1.z;
+			currFace.f.p1.x = vertexCoord1.x + tz1 * lightDirection1.x;
+			currFace.f.p1.y = vertexCoord1.y + tz1 * lightDirection1.y;
+			currFace.f.p1.z = 0;
+			
+			float tz2 = - vertexCoord2.z / lightDirection2.z;
+			currFace.f.p2.x = vertexCoord2.x + tz2 * lightDirection2.x;
+			currFace.f.p2.y = vertexCoord2.y + tz2 * lightDirection2.y;
+			currFace.f.p2.z = 0;
+			
+			float tz3 = - vertexCoord3.z / lightDirection3.z;
+			currFace.f.p3.x = vertexCoord3.x + tz3 * lightDirection3.x;
+			currFace.f.p3.y = vertexCoord3.y + tz3 * lightDirection3.y;
+			currFace.f.p3.z = 0;
+
+		}else{
+			float tz1, tz2,tz3;
+			tz1 = - vertexCoord1.z*1000;
+			tz2 = - vertexCoord2.z*1000;
+			tz3 = - vertexCoord3.z*1000;
+			
+			currFace.f.p1.x = vertexCoord1.x + tz1 * lightDirection1.x;
+			currFace.f.p1.y = vertexCoord1.y + tz1 * lightDirection1.y;
+			currFace.f.p1.z = 0;
+
+			currFace.f.p2.x = vertexCoord2.x + tz2 * lightDirection2.x;
+			currFace.f.p2.y = vertexCoord2.y + tz2 * lightDirection2.y;
+			currFace.f.p2.z = 0;
+
+			currFace.f.p3.x = vertexCoord3.x + tz3 * lightDirection3.x;
+			currFace.f.p3.y = vertexCoord3.y + tz3 * lightDirection3.y;
+			currFace.f.p3.z = 0;
+		}
+
+		faces.push_back(currFace);
+		++saved;
+	}
+	
+	std::vector<face>::iterator itFaces;
+	int k = 0;
+	for(itFaces = faces.begin(); itFaces < faces.end(); ++itFaces){
+		outVertexes[9*k]=(*itFaces).f.p1.x;
+		outVertexes[9*k + 1]=(*itFaces).f.p1.y;
+		outVertexes[9*k + 2]=(*itFaces).f.p1.z;
+		outVertexes[9*k + 3]=(*itFaces).f.p2.x;
+		outVertexes[9*k + 4]=(*itFaces).f.p2.y;
+		outVertexes[9*k + 5]=(*itFaces).f.p2.z;
+		outVertexes[9*k + 6]=(*itFaces).f.p3.x;
+		outVertexes[9*k + 7]=(*itFaces).f.p3.y;
+		outVertexes[9*k + 8]=(*itFaces).f.p3.z;
+		++k;
+	}
+
+	*finalVertexes = 3*saved;
+}
+
 void scaling(float scale, float inVertexes[], float outVertexes[], unsigned vertexesSize){
 	for(unsigned i  = 0; i < vertexesSize*3; ++i){
 		outVertexes[i] = inVertexes[i]*scale;
@@ -549,10 +818,11 @@ void getFurnishTexture(unsigned int texName){
 }
 
 void getObjectTexture(unsigned int texName, const cv::Mat& image){
+
 	glBindTexture(GL_TEXTURE_2D, texName);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // GL_LINEAR
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);// GL_LINEAR
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // GL_LINEAR
 	int w = image.cols;
 	int h = image.rows;
 
@@ -565,6 +835,7 @@ void getObjectTexture(unsigned int texName, const cv::Mat& image){
 	else if(m_furnishImage.channels() == 4)
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data);
 	else if (image.channels()==1)
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, image.data);		
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, image.data);
+			
 }
 

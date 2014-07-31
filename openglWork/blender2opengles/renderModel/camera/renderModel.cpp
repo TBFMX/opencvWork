@@ -158,16 +158,83 @@ bool processFrame(const cv::Mat& cameraFrame, MarkerDetector& markerDetector, Dr
 	//~ pipeline.m_patternDetector.homographyReprojectionThreshold = std::min(10.0f, pipeline.m_patternDetector.homographyReprojectionThreshold);
 	
     // Find a pattern and update it's detection status:
-    drawingCtx.isPatternPresent = markerDetector.processFrame(cameraFrame);
+    drawingCtx.isAPatternPresent = markerDetector.processFrame(cameraFrame);
     //~ LOG_INFO("pattern testing");
 
 	std::vector<Transformation> m_transformations;
 	m_transformations = markerDetector.getTransformations();
+	
+	std::vector<int> m_markerIds;
+	m_markerIds= markerDetector.getMarkerIds();
+	
     // Update a pattern pose:
     //~ for( int i = 0; i < m_transformations.size(); ++i)
 		//~ drawingCtx.patternPose = m_transformations[i];
-    if(m_transformations.size() > 0)
-		drawingCtx.patternPose = m_transformations[0];
+	drawingCtx.isLightPresent = false;
+	drawingCtx.isTigerPresent = false;
+	drawingCtx.isFurnishPresent = false;
+	switch(m_transformations.size()){
+		case 0:
+			break;
+		case 1: 
+			if(m_markerIds[0] == 213){
+				drawingCtx.tigerPose = m_transformations[0];
+				drawingCtx.isTigerPresent = true;
+			}else{
+				if(m_markerIds[0] == 341){
+					drawingCtx.lightPose = m_transformations[0];
+					drawingCtx.isLightPresent = true;
+				}
+			}
+			break;
+		case 2:
+			if(m_markerIds[0] == 213){
+				drawingCtx.tigerPose = m_transformations[0];
+				drawingCtx.isTigerPresent = true;
+			}else{
+				if(m_markerIds[0] == 341){
+					drawingCtx.lightPose = m_transformations[0];
+					drawingCtx.isLightPresent = true;
+				}
+			}		
+			if(m_markerIds[1] == 213){
+				drawingCtx.tigerPose = m_transformations[1];
+				drawingCtx.isTigerPresent = true;
+			}else{
+				if(m_markerIds[1] == 341){
+					drawingCtx.lightPose = m_transformations[1];
+					drawingCtx.isLightPresent = true;
+				}
+			}		
+			break;
+		//~ default:
+			//~ if(m_markerIds[0] == 213){
+				//~ drawingCtx.tigerPose = m_transformations[0];
+				//~ drawingCtx.isTigerPresent = true;
+			//~ }else{
+				//~ if(m_markerIds[0] == 341){
+					//~ drawingCtx.lightPose = m_transformations[0];
+					//~ drawingCtx.isLightPresent = true;
+				//~ }
+			//~ }		
+			//~ if(m_markerIds[1] == 213){
+				//~ drawingCtx.tigerPose = m_transformations[1];
+				//~ drawingCtx.isTigerPresent = true;
+			//~ }else{
+				//~ if(m_markerIds[1] == 341){
+					//~ drawingCtx.lightPose = m_transformations[1];
+					//~ drawingCtx.isLightPresent = true;
+				//~ }
+			//~ }
+			//~ break;
+	}
+	
+	
+    //~ if( > 0){
+		//~ if(m_marker)
+		//~ drawingCtx.patternPose = m_transformations[0];
+		//~ std::cout << "marker id " << m_markerIds[0] <<endl;
+	//~ }
 
      //~ LOG_INFO("pose testing %d transformations", m_transformations.size());
      std::cout << "pose testing "  << m_transformations.size()<< " transformations " << std::endl;
@@ -272,10 +339,10 @@ int main(int argc, char *argv[]) {
 			if(bufferIndex > 0 && gbIsWindowUpdated == true && gbIsProcessing == false){
 				//~ pthread_mutex_lock(&FGmutex);
 				// we validate if the pattern found was the best
-				gbDrawingCtx.validatePatternPresent(); 
+				gbDrawingCtx.validatePatternPresent();
 				//~ pthread_mutex_unlock(&FGmutex);
 				gbIsWindowUpdated = false;
-			}			
+			}
 			
 			XGetWindowAttributes(dpy, win, &gwa);
 			glViewport(0, 0, gwa.width, gwa.height);
@@ -290,7 +357,7 @@ int main(int argc, char *argv[]) {
 					gbDrawingCtx.drawPersistance();
 					++gbPersistance;
 					// LOG_INFO("persistance %d", gbPersistance);
-					cout << "persistance " << gbPersistance << std::endl;
+					//~ cout << "persistance " << gbPersistance << std::endl;
 					if(gbPersistance > MAX_PERSISTANCE)
 						gbPersistance = 0;
 					

@@ -48,7 +48,10 @@ void getCameraOrigin(GLfloat mdl[16], point3 *camera_org);
 void scaling(float scale, float inVertexes[], float outVertexes[], unsigned vertexesSize);
 void getFacesNearToCamera(unsigned vertexesSize, point3 cameraOrigin,float inTexcoords[], float inColors[][4], float inVertexes[],
 								float outTexCoords[], float outColors[][4], float outVertexes[], unsigned *finalVertexes);
+void getFacesNearToLight(unsigned vertexesSize, point3 lightOrigin, float inVertexes[], float outVertexes[], unsigned *finalVertexes);
 void getAllSortedFaces(unsigned vertexesSize, point3 cameraOrigin,float inTexcoords[], float inVertexes[], float inNormals[],
 								float outTexCoords[], float outVertexes[], float outNormals[], unsigned *finalVertexes);								
+void getOrthoShadow(unsigned vertexesSize, point3 lightDirection, float inVertexes[], float outVertexes[], unsigned *finalVertexes);
+void getPerspectiveShadow(unsigned vertexesSize, point3 lightPosition, float inVertexes[], float outVertexes[], unsigned *finalVertexes);
 float getDistance(point3 a, point3 b);
 #endif
